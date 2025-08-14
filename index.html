@@ -16,6 +16,8 @@
             cursor: pointer;
             border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
+            text-align: center;
+            flex-grow: 1;
         }
         .tab-button.active {
             border-color: #4f46e5;
@@ -31,7 +33,8 @@
         .step-row {
             display: flex;
             justify-content: space-between;
-            padding: 0.5rem 0;
+            align-items: center;
+            padding: 0.75rem 0;
             border-bottom: 1px solid #e5e7eb;
         }
         .step-row:last-child {
@@ -44,6 +47,51 @@
             font-weight: 600;
             color: #1f2937;
         }
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .tooltip {
+            visibility: hidden;
+            width: 220px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            font-weight: 400;
+        }
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        @keyframes flash {
+            0% { background-color: transparent; }
+            25% { background-color: #fefce8; }
+            100% { background-color: transparent; }
+        }
+        .flash-bg {
+            animation: flash 1s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -52,35 +100,73 @@
         <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
             <div class="p-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Advanced FX & Interest Calculator</h1>
-                <p class="text-gray-600 mb-6">Analyze your EUR to TRY conversion with breakeven points and historical data.</p>
+                <p class="text-gray-600 mb-6">Analyze your credit card payments, EUR to TRY conversion, and breakeven points.</p>
                 
                 <!-- Tabs -->
                 <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                        <button class="tab-button active" data-tab="calculator">Calculator</button>
-                        <button class="tab-button" data-tab="analysis">Breakeven Analysis</button>
-                        <button class="tab-button" data-tab="chart">Historical Chart</button>
+                    <nav class="-mb-px flex space-x-2" aria-label="Tabs">
+                        <button class="tab-button active" data-tab="credit-card">1. Payment Goal</button>
+                        <button class="tab-button" data-tab="calculator">2. Scenario</button>
+                        <button class="tab-button" data-tab="analysis">3. Analysis</button>
+                        <button class="tab-button" data-tab="chart">4. Chart</button>
                     </nav>
                 </div>
 
-                <!-- Calculator Tab -->
-                <div id="calculator" class="tab-content active mt-6">
-                    <!-- Input Section -->
+                <!-- Credit Card & Payment Analysis Tab -->
+                <div id="credit-card" class="tab-content active mt-6">
                     <div class="bg-gray-50 p-6 rounded-lg">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-4">1. Enter Your Scenario</h2>
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Define Your Payment</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label for="canPayable" class="block text-sm font-medium text-gray-700">Can Total Payable (TRY)</label>
+                                <input type="number" id="canPayable" placeholder="0" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div>
+                                <label for="funjaPayable" class="block text-sm font-medium text-gray-700">Funja Total Payable (TRY)</label>
+                                <input type="number" id="funjaPayable" placeholder="0" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div class="mt-4">
+                                <div id="cc-total-row" class="step-row"></div>
+                            </div>
+                            <div>
+                                <label for="paymentOption" class="block text-sm font-medium text-gray-700">Payment Option</label>
+                                <select id="paymentOption" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                                    <option value="full">Full Payment (100%)</option>
+                                    <option value="minimum">Minimum Payment (40%)</option>
+                                </select>
+                            </div>
+                            <div class="mt-4">
+                                 <div id="cc-payable-row" class="step-row bg-green-100 p-4 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FX Scenario Tab -->
+                <div id="calculator" class="tab-content mt-6">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Run an FX Scenario</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div class="md:col-span-2">
+                                <label for="desiredTry" class="block text-sm font-medium text-gray-700">Desired Net TRY to Receive</label>
+                                <div class="mt-1 flex rounded-md shadow-sm">
+                                    <input type="number" id="desiredTry" placeholder="Optional: Enter a TRY goal" class="block w-full flex-1 rounded-none rounded-l-md px-3 py-2 border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <button id="usePaymentGoalBtn" class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-200 px-3 text-sm text-gray-700 hover:bg-gray-300">Use Goal</button>
+                                </div>
+                            </div>
+                            <hr class="md:col-span-2 my-2"/>
                             <div>
                                 <label for="eurAmount" class="block text-sm font-medium text-gray-700">Amount to Send (EUR)</label>
-                                <input type="number" id="eurAmount" placeholder="e.g., 1000" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <input type="number" id="eurAmount" placeholder="Enter amount or use goal above" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
                                 <label for="manualRate" class="block text-sm font-medium text-gray-700">Manual EUR/TRY Rate</label>
-                                <input type="number" id="manualRate" placeholder="Leave blank for live rate" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <input type="number" id="manualRate" placeholder="Leave blank for live rate" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
                                 <label for="expenseValue" class="block text-sm font-medium text-gray-700">Sending Expense</label>
                                 <div class="mt-1 flex rounded-md shadow-sm">
-                                    <input type="number" id="expenseValue" value="1.1" class="block w-full flex-1 rounded-none rounded-l-md px-3 py-2 border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <input type="number" id="expenseValue" value="1.1" class="block w-full flex-1 rounded-none rounded-l-md px-3 py-2 border border-gray-300">
                                     <select id="expenseType" class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
                                         <option value="percent">%</option>
                                         <option value="amount">EUR</option>
@@ -88,30 +174,41 @@
                                 </div>
                             </div>
                              <div>
-                                <label for="monthlyInterestRate" class="block text-sm font-medium text-gray-700">
-                                    <a href="https://www.garantibbvaportfoy.com.tr/birinci-para-piyasasi-fonu" target="_blank" class="text-indigo-600 hover:underline">Monthly Interest Rate (%)</a>
-                                </label>
-                                <input type="number" id="monthlyInterestRate" value="3.5" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <label for="investmentEndDate" class="block text-sm font-medium text-gray-700">Invest Until</label>
+                                <input type="date" id="investmentEndDate" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
                              </div>
                              <div>
-                                <label for="investmentDays" class="block text-sm font-medium text-gray-700">Number of Days to Invest</label>
-                                <input type="number" id="investmentDays" value="30" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <label for="monthlyInterestRate" class="block text-sm font-medium text-gray-700">
+                                    Monthly Interest Rate (%)
+                                </label>
+                                <input type="number" id="monthlyInterestRate" value="3.5" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                             </div>
+                             <div class="md:col-span-2 flex items-center justify-end space-x-2">
+                                 <label for="compoundInterestToggle" class="text-sm font-medium text-gray-700">Use Compound Interest</label>
+                                 <input type="checkbox" id="compoundInterestToggle" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                              </div>
                         </div>
-                    </div>
-                     <!-- Results Section -->
-                    <div id="results-wrapper" class="mt-6 hidden">
-                        <div class="bg-gray-50 p-6 rounded-lg mb-6">
-                             <h2 class="text-xl font-semibold text-gray-800 mb-4">Conversion & Interest Results</h2>
-                             <div id="conversionResult"></div>
-                             <div id="interestResult" class="mt-4"></div>
-                        </div>
+                         <button id="calculateBtn" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            Calculate & Analyze
+                        </button>
                     </div>
                 </div>
 
                 <!-- Analysis Tab -->
                 <div id="analysis" class="tab-content mt-6">
-                    <div id="breakeven-wrapper" class="hidden">
+                    <div id="analysis-summary-wrapper">
+                        <div class="bg-yellow-50 p-6 rounded-lg">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Payment Strategy Summary</h2>
+                             <p id="analysis-summary-placeholder" class="text-sm text-center text-gray-500 mt-4">Define your payment goal and run a scenario to see the summary.</p>
+                            <div id="analysisSummaryResult"></div>
+                        </div>
+                    </div>
+                    <div id="scenario-results-wrapper" class="hidden mt-6">
+                         <div class="bg-gray-50 p-6 rounded-lg mb-6">
+                             <h2 class="text-xl font-semibold text-gray-800 mb-4">Detailed Scenario Results</h2>
+                             <div id="conversionResult"></div>
+                             <div id="interestResult" class="mt-4"></div>
+                        </div>
                         <div class="bg-blue-50 p-6 rounded-lg mb-6">
                             <h2 class="text-xl font-semibold text-gray-800 mb-4">Breakeven FX Rate Analysis</h2>
                             <div id="breakevenResult"></div>
@@ -120,24 +217,42 @@
                             <h2 class="text-xl font-semibold text-gray-800 mb-4">Reverse Breakeven Analysis</h2>
                              <div class="mb-4">
                                 <label for="targetRate" class="block text-sm font-medium text-gray-700">If future EUR/TRY rate is...</label>
-                                <input type="number" id="targetRate" placeholder="e.g., 35.5" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <input type="number" id="targetRate" placeholder="e.g., 35.5" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div id="reverseBreakevenResult"></div>
                         </div>
+                        <div class="text-center mt-6">
+                            <button id="saveScenarioBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md">
+                                Save Scenario for Comparison
+                            </button>
+                        </div>
                     </div>
-                     <p id="analysis-placeholder" class="text-center text-gray-500 mt-12">Calculate a scenario on the 'Calculator' tab to see the analysis.</p>
+                    <div id="saved-scenarios-wrapper" class="hidden mt-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Saved Scenarios</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EUR Sent</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net TRY</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Interest</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Breakeven Rate</th>
+                                        <th class="px-4 py-2"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="savedScenariosTable" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-
+                
                 <!-- Chart Tab -->
                 <div id="chart" class="tab-content mt-6">
                     <p class="text-sm text-center text-gray-500 mb-4">EUR/TRY Exchange Rate - Last 30 Days</p>
                     <canvas id="rateChart"></canvas>
                 </div>
                 
-                <button id="calculateBtn" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mb-6">
-                    Calculate
-                </button>
-
                  <div id="loading" class="mt-6 text-center hidden">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                     <p class="text-gray-600 mt-2">Fetching live rate...</p>
@@ -162,23 +277,38 @@
         const expenseValueInput = document.getElementById('expenseValue');
         const expenseTypeSelect = document.getElementById('expenseType');
         const monthlyInterestRateInput = document.getElementById('monthlyInterestRate');
-        const investmentDaysInput = document.getElementById('investmentDays');
+        const investmentEndDateInput = document.getElementById('investmentEndDate');
+        const compoundInterestToggle = document.getElementById('compoundInterestToggle');
         const targetRateInput = document.getElementById('targetRate');
-
+        const desiredTryInput = document.getElementById('desiredTry');
+        const usePaymentGoalBtn = document.getElementById('usePaymentGoalBtn');
+        const canPayableInput = document.getElementById('canPayable');
+        const funjaPayableInput = document.getElementById('funjaPayable');
+        const paymentOptionSelect = document.getElementById('paymentOption');
+        const ccTotalRow = document.getElementById('cc-total-row');
+        const ccPayableRow = document.getElementById('cc-payable-row');
+        const saveScenarioBtn = document.getElementById('saveScenarioBtn');
+        const savedScenariosWrapper = document.getElementById('saved-scenarios-wrapper');
+        const savedScenariosTable = document.getElementById('savedScenariosTable');
+        
         const conversionResultDiv = document.getElementById('conversionResult');
         const interestResultDiv = document.getElementById('interestResult');
         const breakevenResultDiv = document.getElementById('breakevenResult');
         const reverseBreakevenResultDiv = document.getElementById('reverseBreakevenResult');
+        const analysisSummaryResultDiv = document.getElementById('analysisSummaryResult');
 
         const loadingDiv = document.getElementById('loading');
         const apiErrorDiv = document.getElementById('apiError');
-        const resultsWrapper = document.getElementById('results-wrapper');
-        const breakevenWrapper = document.getElementById('breakeven-wrapper');
-        const analysisPlaceholder = document.getElementById('analysis-placeholder');
+        const scenarioResultsWrapper = document.getElementById('scenario-results-wrapper');
+        const analysisSummaryPlaceholder = document.getElementById('analysis-summary-placeholder');
         
         const INTEREST_TAX_RATE = 0.15;
         let rateChart;
         let lastUsedRate = 0;
+        let totalDebt = 0;
+        let minimumPayable = 0;
+        let savedScenarios = [];
+        let lastScenarioResult = {};
 
         // --- Tab Logic ---
         const tabs = document.querySelectorAll('.tab-button');
@@ -193,70 +323,121 @@
             });
         });
         
-        // --- Main Calculation Logic ---
+        // --- Calculation Logic ---
         function createRow(label, value, valueClass = '') {
-            return `
-                <div class="step-row">
-                    <span class="step-label">${label}</span>
-                    <span class="step-value ${valueClass}">${value}</span>
-                </div>`;
+            return `<div class="step-row"><span class="step-label">${label}</span><span class="step-value ${valueClass}">${value}</span></div>`;
+        }
+
+        function createTooltip(text) {
+            return `<div class="tooltip-container">
+                        <svg class="h-4 w-4 text-gray-400 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                        <span class="tooltip">${text}</span>
+                    </div>`;
         }
         
+        function calculateCreditCard() {
+            const canPayable = parseFloat(canPayableInput.value.replace(/,/g, '')) || 0;
+            const funjaPayable = parseFloat(funjaPayableInput.value.replace(/,/g, '')) || 0;
+            totalDebt = canPayable + funjaPayable;
+            minimumPayable = totalDebt * 0.40;
+            
+            const paymentOption = paymentOptionSelect.value;
+            const payableAmount = (paymentOption === 'full') ? totalDebt : minimumPayable;
+
+            ccTotalRow.innerHTML = createRow('<strong>Total Credit Card Debt</strong>', `<strong class="text-xl text-red-600">${totalDebt.toFixed(2)} TRY</strong>`);
+            ccPayableRow.innerHTML = createRow('<strong>Selected Payment Amount</strong>', `<strong class="text-xl text-green-600">${payableAmount.toFixed(2)} TRY</strong>`);
+        }
+        
+        function getRequiredEur(tryAmount, rate, expenseValue, expenseType) {
+            if (tryAmount <= 0) return 0;
+            if (expenseType === 'percent') {
+                return (tryAmount / rate) / (1 - (expenseValue / 100));
+            } else {
+                return (tryAmount / rate) + expenseValue;
+            }
+        }
+
+        async function generateAnalysisSummary(eurToTryRate) {
+            if (totalDebt <= 0) {
+                analysisSummaryPlaceholder.classList.remove('hidden');
+                analysisSummaryResultDiv.innerHTML = '';
+                return;
+            }
+            analysisSummaryPlaceholder.classList.add('hidden');
+            
+            const expenseValue = parseFloat(expenseValueInput.value) || 1.1;
+            const expenseType = expenseTypeSelect.value;
+            const monthlyInterestRate = parseFloat(monthlyInterestRateInput.value);
+            const dailyInterestRate = monthlyInterestRate / 30 / 100;
+
+            const eurForFull = getRequiredEur(totalDebt, eurToTryRate, expenseValue, expenseType);
+            const eurForMin = getRequiredEur(minimumPayable, eurToTryRate, expenseValue, expenseType);
+            
+            // Calculate potential interest on the payable amounts themselves
+            const dailyInterestOnFullPayable = totalDebt * dailyInterestRate * (1 - INTEREST_TAX_RATE);
+            const dailyInterestOnMinPayable = minimumPayable * dailyInterestRate * (1 - INTEREST_TAX_RATE);
+
+            let summaryHTML = `
+                <div class="bg-white p-4 rounded-lg mb-4">
+                    <h3 class="font-semibold text-lg mb-2">Full Payment Scenario</h3>
+                    ${createRow('Total Payable', `${totalDebt.toFixed(2)} TRY`)}
+                    ${createRow('EUR to Send', `<strong>${eurForFull.toFixed(2)} EUR</strong>`)}
+                    ${createRow('Potential Daily Net Interest' + createTooltip('Potential interest earned per day if the full payable amount was invested instead.'), `${dailyInterestOnFullPayable.toFixed(2)} TRY`)}
+                </div>
+                <div class="bg-white p-4 rounded-lg">
+                    <h3 class="font-semibold text-lg mb-2">Minimum Payment Scenario</h3>
+                    ${createRow('Minimum Payable', `${minimumPayable.toFixed(2)} TRY`)}
+                    ${createRow('EUR to Send', `<strong>${eurForMin.toFixed(2)} EUR</strong>`)}
+                    ${createRow('Potential Daily Net Interest' + createTooltip('Potential interest earned per day if the minimum payable amount was invested instead.'), `${dailyInterestOnMinPayable.toFixed(2)} TRY`)}
+                </div>
+            `;
+            analysisSummaryResultDiv.innerHTML = summaryHTML;
+        }
+
         function runCalculations(eurToTryRate) {
             lastUsedRate = eurToTryRate;
             const eurAmount = parseFloat(eurAmountInput.value);
             const monthlyInterestRate = parseFloat(monthlyInterestRateInput.value);
-            const investmentDays = parseInt(investmentDaysInput.value);
+            
+            const endDate = new Date(investmentEndDateInput.value);
+            const startDate = new Date();
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const investmentDays = Math.max(0, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+
             const expenseValue = parseFloat(expenseValueInput.value);
             const expenseType = expenseTypeSelect.value;
             const targetRate = parseFloat(targetRateInput.value);
             
-            let expenseAmount, netTryAmount, breakevenRate;
+            let expenseAmount, netTryAmount, breakevenRate, grossInterestForPeriod;
 
-            // 1. Conversion
             const grossTryAmount = eurAmount * eurToTryRate;
             if (expenseType === 'percent') {
-                const sendingExpenseRate = expenseValue / 100;
-                expenseAmount = grossTryAmount * sendingExpenseRate;
+                expenseAmount = grossTryAmount * (expenseValue / 100);
             } else {
                 expenseAmount = expenseValue * eurToTryRate;
             }
             netTryAmount = grossTryAmount - expenseAmount;
             
-            conversionResultDiv.innerHTML = 
-                createRow('Used EUR/TRY Rate', `${eurToTryRate.toFixed(4)}`) +
-                createRow('Gross Amount', `${grossTryAmount.toFixed(2)} TRY`) +
-                createRow(`Sending Expense`, `<span class="text-red-600">- ${expenseAmount.toFixed(2)} TRY</span>`) +
-                createRow('<strong>Net Received Amount</strong>', `<strong class="text-xl text-indigo-600">${netTryAmount.toFixed(2)} TRY</strong>`);
+            conversionResultDiv.innerHTML = createRow('Used EUR/TRY Rate', `${eurToTryRate.toFixed(4)}`) + createRow('Gross Amount', `${grossTryAmount.toFixed(2)} TRY`) + createRow(`Sending Expense`, `<span class="text-red-600">- ${expenseAmount.toFixed(2)} TRY</span>`) + createRow('<strong>Net Received Amount</strong>', `<strong class="text-xl text-indigo-600">${netTryAmount.toFixed(2)} TRY</strong>`);
 
-            // 2. Interest
-            const dailyInterestRate = monthlyInterestRate / 30;
-            const grossInterestForPeriod = netTryAmount * (dailyInterestRate / 100) * investmentDays;
+            const dailyInterestRate = monthlyInterestRate / 30 / 100;
+            if (compoundInterestToggle.checked) {
+                grossInterestForPeriod = netTryAmount * (Math.pow(1 + dailyInterestRate, investmentDays) - 1);
+            } else {
+                grossInterestForPeriod = netTryAmount * dailyInterestRate * investmentDays;
+            }
+            
             const taxOnInterest = grossInterestForPeriod * INTEREST_TAX_RATE;
             const netInterestForPeriod = grossInterestForPeriod - taxOnInterest;
 
-            interestResultDiv.innerHTML = 
-                createRow(`Gross Interest for ${investmentDays} Days`, `${grossInterestForPeriod.toFixed(2)} TRY`) +
-                createRow('Withholding Tax (15%)', `<span class="text-red-600">- ${taxOnInterest.toFixed(2)} TRY</span>`) +
-                createRow(`<strong>Net Interest for ${investmentDays} Days</strong>`, `<strong class="text-xl text-green-600">${netInterestForPeriod.toFixed(2)} TRY</strong>`);
+            interestResultDiv.innerHTML = createRow(`Gross Interest for ${investmentDays} Days`, `${grossInterestForPeriod.toFixed(2)} TRY`) + createRow('Withholding Tax (15%)', `<span class="text-red-600">- ${taxOnInterest.toFixed(2)} TRY</span>`) + createRow(`<strong>Net Interest for ${investmentDays} Days</strong>`, `<strong class="text-xl text-green-600">${netInterestForPeriod.toFixed(2)} TRY</strong>`);
 
-            // 3. Breakeven
             const totalFutureValue = netTryAmount + netInterestForPeriod;
-            if (expenseType === 'percent') {
-                const sendingExpenseRate = expenseValue / 100;
-                const futureGrossTryEquivalent = totalFutureValue / (1 - sendingExpenseRate);
-                breakevenRate = futureGrossTryEquivalent / eurAmount;
-            } else {
-                breakevenRate = totalFutureValue / (eurAmount - expenseValue);
-            }
+            breakevenRate = getRequiredEur(totalFutureValue, 1, expenseValue, expenseType) / eurAmount;
             const rateDifference = breakevenRate - eurToTryRate;
 
-            breakevenResultDiv.innerHTML = 
-                createRow('Total Value (Principal + Net Interest)', `${totalFutureValue.toFixed(2)} TRY`) +
-                createRow('<strong>Breakeven EUR/TRY Rate</strong>', `<strong class="text-xl text-blue-600">${breakevenRate.toFixed(4)}</strong>`) +
-                createRow('Required Rate Increase', `<span class="text-blue-600 font-semibold">${rateDifference.toFixed(4)} <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg></span>`);
+            breakevenResultDiv.innerHTML = createRow('Total Value (Principal + Net Interest)', `${totalFutureValue.toFixed(2)} TRY`) + createRow('<strong>Breakeven EUR/TRY Rate</strong>' + createTooltip('The future exchange rate required to match the total value of converting today plus earning interest.'), `<strong class="text-xl text-blue-600">${breakevenRate.toFixed(4)}</strong>`) + createRow('Required Rate Increase', `<span class="text-blue-600 font-semibold">${rateDifference.toFixed(4)} <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg></span>`);
 
-            // 4. Reverse Breakeven
             if (!isNaN(targetRate) && targetRate > 0) {
                  const targetGrossTry = eurAmount * targetRate;
                  let targetNetTry;
@@ -267,7 +448,7 @@
                  }
                  const requiredInterest = targetNetTry - netTryAmount;
                  if (requiredInterest > 0 && dailyInterestRate > 0) {
-                    const requiredDays = requiredInterest / (netTryAmount * (dailyInterestRate / 100) * (1-INTEREST_TAX_RATE));
+                    const requiredDays = requiredInterest / (netTryAmount * dailyInterestRate * (1-INTEREST_TAX_RATE));
                     reverseBreakevenResultDiv.innerHTML = createRow(`To match a rate of ${targetRate.toFixed(4)}, you would need to earn interest for ~<strong>${Math.ceil(requiredDays)} days</strong>.`, '');
                  } else {
                     reverseBreakevenResultDiv.innerHTML = createRow(`The target rate of ${targetRate.toFixed(4)} is already lower than the net conversion rate.`, '');
@@ -275,39 +456,54 @@
             } else {
                 reverseBreakevenResultDiv.innerHTML = `<p class="text-sm text-gray-500">Enter a target rate to see the required investment period.</p>`;
             }
-
-
-            // Show results
-            resultsWrapper.classList.remove('hidden');
-            breakevenWrapper.classList.remove('hidden');
-            analysisPlaceholder.classList.add('hidden');
-            calculateBtn.textContent = "Recalculate";
+            
+            lastScenarioResult = { eur: eurAmount, netTry: netTryAmount, netInterest: netInterestForPeriod, breakeven: breakevenRate };
+            scenarioResultsWrapper.classList.remove('hidden');
+            generateAnalysisSummary(eurToTryRate);
         }
 
         async function performCalculations() {
-            const inputs = [eurAmountInput, monthlyInterestRateInput, investmentDaysInput, expenseValueInput];
-            if (inputs.some(input => isNaN(parseFloat(input.value)) || parseFloat(input.value) < 0)) {
+            const desiredTry = parseFloat(desiredTryInput.value);
+            const useReverseCalc = !isNaN(desiredTry) && desiredTry > 0;
+
+            const inputs = [monthlyInterestRateInput, expenseValueInput];
+            if (!useReverseCalc) {
+                inputs.push(eurAmountInput);
+            }
+            if (inputs.some(input => isNaN(parseFloat(input.value)) || parseFloat(input.value) < 0) || !investmentEndDateInput.value) {
                 apiErrorDiv.classList.remove('hidden');
                 return;
             }
             
             apiErrorDiv.classList.add('hidden');
-            resultsWrapper.classList.add('hidden');
-            breakevenWrapper.classList.add('hidden');
-            analysisPlaceholder.classList.remove('hidden');
+            scenarioResultsWrapper.classList.add('hidden');
 
             try {
+                loadingDiv.classList.remove('hidden');
                 const manualRate = parseFloat(manualRateInput.value);
+                let eurToTryRate;
+
                 if (!isNaN(manualRate) && manualRate > 0) {
-                    runCalculations(manualRate);
+                    eurToTryRate = manualRate;
                 } else {
-                    loadingDiv.classList.remove('hidden');
                     const response = await fetch('https://api.frankfurter.app/latest?from=EUR&to=TRY');
                     if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     if (!data || !data.rates || !data.rates.TRY) throw new Error('Invalid API response.');
-                    runCalculations(data.rates.TRY);
+                    eurToTryRate = data.rates.TRY;
                 }
+
+                if (useReverseCalc) {
+                    const expenseValue = parseFloat(expenseValueInput.value) || 1.1;
+                    const expenseType = expenseTypeSelect.value;
+                    const requiredEUR = getRequiredEur(desiredTry, eurToTryRate, expenseValue, expenseType);
+                    eurAmountInput.value = requiredEUR.toFixed(2);
+                    eurAmountInput.classList.add('flash-bg');
+                    setTimeout(() => eurAmountInput.classList.remove('flash-bg'), 1000);
+                }
+
+                runCalculations(eurToTryRate);
+
             } catch (error) {
                 console.error("Calculation Error:", error);
                 apiErrorDiv.classList.remove('hidden');
@@ -316,7 +512,6 @@
             }
         }
         
-        // --- Chart Logic ---
         async function fetchAndDrawChart() {
             const endDate = new Date();
             const startDate = new Date();
@@ -336,40 +531,72 @@
                 }
                 rateChart = new Chart(ctx, {
                     type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'EUR to TRY Exchange Rate',
-                            data: chartData,
-                            borderColor: '#4f46e5',
-                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                            fill: true,
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: false
-                            }
-                        }
-                    }
+                    data: { labels: labels, datasets: [{ label: 'EUR to TRY Exchange Rate', data: chartData, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.1 }] },
+                    options: { responsive: true, scales: { y: { beginAtZero: false } } }
                 });
             } catch (error) {
                 console.error("Chart Error:", error);
                 document.getElementById('chart').innerHTML = `<p class="text-center text-red-500">Could not load historical data.</p>`;
             }
         }
+
+        function renderSavedScenarios() {
+            savedScenariosTable.innerHTML = '';
+            if (savedScenarios.length === 0) {
+                savedScenariosWrapper.classList.add('hidden');
+                return;
+            }
+            savedScenariosWrapper.classList.remove('hidden');
+            savedScenarios.forEach((scenario, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${scenario.eur.toFixed(2)}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${scenario.netTry.toFixed(2)}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${scenario.netInterest.toFixed(2)}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${scenario.breakeven.toFixed(4)}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-red-600 hover:text-red-900" data-index="${index}">Delete</button>
+                    </td>
+                `;
+                savedScenariosTable.appendChild(row);
+            });
+        }
         
         // --- Event Listeners ---
         calculateBtn.addEventListener('click', performCalculations);
-        targetRateInput.addEventListener('input', () => {
-             if(lastUsedRate > 0) runCalculations(lastUsedRate);
+        targetRateInput.addEventListener('input', () => { if(lastUsedRate > 0) runCalculations(lastUsedRate); });
+        [canPayableInput, funjaPayableInput, paymentOptionSelect].forEach(el => el.addEventListener('input', calculateCreditCard));
+        usePaymentGoalBtn.addEventListener('click', () => {
+            const paymentOption = paymentOptionSelect.value;
+            const goal = (paymentOption === 'full') ? totalDebt : minimumPayable;
+            if (goal > 0) {
+                desiredTryInput.value = goal.toFixed(2);
+            }
+        });
+        saveScenarioBtn.addEventListener('click', () => {
+            if (lastScenarioResult.eur) {
+                savedScenarios.push(lastScenarioResult);
+                renderSavedScenarios();
+            }
+        });
+        savedScenariosTable.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const index = parseInt(e.target.dataset.index);
+                savedScenarios.splice(index, 1);
+                renderSavedScenarios();
+            }
         });
 
-        // Initial Load
+
+        // --- Initial Load ---
+        function setInitialDate() {
+            const date = new Date();
+            date.setDate(date.getDate() + 30);
+            investmentEndDateInput.value = date.toISOString().split('T')[0];
+        }
+        setInitialDate();
         fetchAndDrawChart();
+        calculateCreditCard();
 
     </script>
 
