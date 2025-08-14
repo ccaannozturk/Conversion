@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -30,13 +30,11 @@
 </head>
 <body class="bg-gray-100">
 
-
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
             <div class="p-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">FX & Interest Calculator</h1>
                 <p class="text-gray-600 mb-8">Calculate your EUR to TRY conversion and potential interest earnings over a specific period.</p>
-
 
                 <!-- FX Conversion Section -->
                 <div class="bg-gray-50 p-6 rounded-lg mb-8">
@@ -51,6 +49,16 @@
                             <label for="manualRate" class="block text-sm font-medium text-gray-700">Manual EUR/TRY Rate</label>
                             <input type="number" id="manualRate" placeholder="Leave blank for live rate" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
+                        <div class="md:col-span-2">
+                             <label for="expenseValue" class="block text-sm font-medium text-gray-700">Sending Expense</label>
+                             <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="number" id="expenseValue" value="1.1" class="block w-full flex-1 rounded-none rounded-l-md px-3 py-2 border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <select id="expenseType" class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
+                                    <option value="percent">%</option>
+                                    <option value="amount">EUR</option>
+                                </select>
+                             </div>
+                        </div>
                     </div>
                     
                     <div id="conversionResult" class="mt-4 hidden">
@@ -63,7 +71,7 @@
                             <span id="grossTry" class="step-value">... TRY</span>
                         </div>
                         <div class="step-row">
-                            <span class="step-label">Sending Expense (~1.1%)</span>
+                            <span id="sendingExpenseLabel" class="step-label">Sending Expense</span>
                             <span id="sendingExpense" class="step-value text-red-600">- ... TRY</span>
                         </div>
                         <div class="step-row pt-4">
@@ -72,7 +80,6 @@
                         </div>
                     </div>
                 </div>
-
 
                 <!-- Interest Calculation Section -->
                 <div class="bg-gray-50 p-6 rounded-lg mb-8">
@@ -122,11 +129,9 @@
                     </div>
                 </div>
 
-
                 <button id="calculateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mb-6">
                     Calculate
                 </button>
-
 
                  <div id="loading" class="mt-6 text-center hidden">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -137,7 +142,6 @@
                     <p class="text-sm text-red-700 mt-1">Could not perform calculation. Please check all input values and try again.</p>
                 </div>
 
-
                 <div class="mt-8 text-xs text-gray-500 text-center">
                     <p><strong>Disclaimer:</strong> This is a tool for estimation purposes only. Exchange rates and interest rates fluctuate. The sending expense is an estimate. Consult with your financial institution for exact figures.</p>
                 </div>
@@ -145,14 +149,14 @@
         </div>
     </div>
 
-
     <script>
         const calculateBtn = document.getElementById('calculateBtn');
         const eurAmountInput = document.getElementById('eurAmount');
         const manualRateInput = document.getElementById('manualRate');
+        const expenseValueInput = document.getElementById('expenseValue');
+        const expenseTypeSelect = document.getElementById('expenseType');
         const monthlyInterestRateInput = document.getElementById('monthlyInterestRate');
         const investmentDaysInput = document.getElementById('investmentDays');
-
 
         const conversionResultDiv = document.getElementById('conversionResult');
         const interestResultDiv = document.getElementById('interestResult');
@@ -160,6 +164,7 @@
         
         const exchangeRateSpan = document.getElementById('exchangeRate');
         const grossTrySpan = document.getElementById('grossTry');
+        const sendingExpenseLabel = document.getElementById('sendingExpenseLabel');
         const sendingExpenseSpan = document.getElementById('sendingExpense');
         const netTryAmountSpan = document.getElementById('netTryAmount');
         
@@ -169,18 +174,13 @@
         const netInterestLabel = document.getElementById('netInterestLabel');
         const netInterestSpan = document.getElementById('netInterest');
 
-
         const totalFutureValueSpan = document.getElementById('totalFutureValue');
         const breakevenRateSpan = document.getElementById('breakevenRate');
 
-
         const loadingDiv = document.getElementById('loading');
         const apiErrorDiv = document.getElementById('apiError');
-
-
-        const SENDING_EXPENSE_RATE = 0.011; // 11 in 1000 = 1.1%
+        
         const INTEREST_TAX_RATE = 0.15; // 15%
-
 
         calculateBtn.addEventListener('click', performCalculations);
         
@@ -188,13 +188,24 @@
             const eurAmount = parseFloat(eurAmountInput.value);
             const monthlyInterestRate = parseFloat(monthlyInterestRateInput.value);
             const investmentDays = parseInt(investmentDaysInput.value);
-
+            const expenseValue = parseFloat(expenseValueInput.value);
+            const expenseType = expenseTypeSelect.value;
+            
+            let expenseAmount, netTryAmount, breakevenRate;
 
             // 1. Conversion Calculation
             const grossTryAmount = eurAmount * eurToTryRate;
-            const expenseAmount = grossTryAmount * SENDING_EXPENSE_RATE;
-            const netTryAmount = grossTryAmount - expenseAmount;
 
+            if (expenseType === 'percent') {
+                const sendingExpenseRate = expenseValue / 100;
+                expenseAmount = grossTryAmount * sendingExpenseRate;
+                netTryAmount = grossTryAmount - expenseAmount;
+                sendingExpenseLabel.textContent = `Sending Expense (~${expenseValue}%)`;
+            } else { // 'amount'
+                expenseAmount = expenseValue * eurToTryRate; // Convert EUR expense to TRY
+                netTryAmount = grossTryAmount - expenseAmount;
+                sendingExpenseLabel.textContent = `Sending Expense (${expenseValue} EUR)`;
+            }
 
             // 2. Interest Calculation for the period
             const dailyInterestRate = monthlyInterestRate / 30; // Approximate daily rate
@@ -202,18 +213,22 @@
             const taxOnInterest = grossInterestForPeriod * INTEREST_TAX_RATE;
             const netInterestForPeriod = grossInterestForPeriod - taxOnInterest;
 
-
             // 3. Breakeven Calculation
             const totalFutureValue = netTryAmount + netInterestForPeriod;
-            const futureGrossTryEquivalent = totalFutureValue / (1 - SENDING_EXPENSE_RATE);
-            const breakevenRate = futureGrossTryEquivalent / eurAmount;
+            
+            if (expenseType === 'percent') {
+                const sendingExpenseRate = expenseValue / 100;
+                const futureGrossTryEquivalent = totalFutureValue / (1 - sendingExpenseRate);
+                breakevenRate = futureGrossTryEquivalent / eurAmount;
+            } else { // 'amount'
+                 breakevenRate = totalFutureValue / (eurAmount - expenseValue);
+            }
 
 
             // 4. Display Conversion Results
             grossTrySpan.textContent = `${grossTryAmount.toFixed(2)} TRY`;
             sendingExpenseSpan.textContent = `- ${expenseAmount.toFixed(2)} TRY`;
             netTryAmountSpan.textContent = `${netTryAmount.toFixed(2)} TRY`;
-
 
             // 5. Display Interest Results for the period
             grossInterestLabel.textContent = `Gross Interest for ${investmentDays} Days`;
@@ -226,21 +241,19 @@
             totalFutureValueSpan.textContent = `${totalFutureValue.toFixed(2)} TRY`;
             breakevenRateSpan.textContent = breakevenRate.toFixed(4);
 
-
             conversionResultDiv.classList.remove('hidden');
             interestResultDiv.classList.remove('hidden');
             breakevenResultDiv.classList.remove('hidden');
         }
-
 
         async function performCalculations() {
             const eurAmount = parseFloat(eurAmountInput.value);
             const monthlyInterestRate = parseFloat(monthlyInterestRateInput.value);
             const investmentDays = parseInt(investmentDaysInput.value);
             const manualRate = parseFloat(manualRateInput.value);
+            const expenseValue = parseFloat(expenseValueInput.value);
 
-
-            if (isNaN(eurAmount) || eurAmount <= 0 || isNaN(monthlyInterestRate) || monthlyInterestRate < 0 || isNaN(investmentDays) || investmentDays <= 0) {
+            if (isNaN(eurAmount) || eurAmount <= 0 || isNaN(monthlyInterestRate) || monthlyInterestRate < 0 || isNaN(investmentDays) || investmentDays <= 0 || isNaN(expenseValue) || expenseValue < 0) {
                 apiErrorDiv.classList.remove('hidden');
                 conversionResultDiv.classList.add('hidden');
                 interestResultDiv.classList.add('hidden');
@@ -252,7 +265,6 @@
             conversionResultDiv.classList.add('hidden');
             interestResultDiv.classList.add('hidden');
             breakevenResultDiv.classList.add('hidden');
-
 
             try {
                 if (!isNaN(manualRate) && manualRate > 0) {
@@ -279,7 +291,6 @@
             }
         }
     </script>
-
 
 </body>
 </html>
