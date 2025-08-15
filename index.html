@@ -112,7 +112,7 @@
                     </nav>
                 </div>
 
-                <!-- Credit Card & Payment Analysis Tab -->
+                <!-- Credit Card Tab -->
                 <div id="credit-card" class="tab-content active mt-6">
                     <div class="bg-gray-50 p-6 rounded-lg">
                         <h2 class="text-xl font-semibold text-gray-800 mb-4">Define Your Payment</h2>
@@ -192,17 +192,7 @@
                             Calculate & Analyze
                         </button>
                     </div>
-                </div>
-
-                <!-- Analysis Tab -->
-                <div id="analysis" class="tab-content mt-6">
-                    <div id="analysis-summary-wrapper">
-                        <div class="bg-yellow-50 p-6 rounded-lg">
-                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Payment Strategy Summary</h2>
-                             <p id="analysis-summary-placeholder" class="text-sm text-center text-gray-500 mt-4">Define your payment goal and run a scenario to see the summary.</p>
-                            <div id="analysisSummaryResult"></div>
-                        </div>
-                    </div>
+                    <!-- Scenario Results & Analysis -->
                     <div id="scenario-results-wrapper" class="hidden mt-6">
                          <div class="bg-gray-50 p-6 rounded-lg mb-6">
                              <h2 class="text-xl font-semibold text-gray-800 mb-4">Detailed Scenario Results</h2>
@@ -243,6 +233,17 @@
                                 <tbody id="savedScenariosTable" class="bg-white divide-y divide-gray-200">
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Tab -->
+                <div id="analysis" class="tab-content mt-6">
+                    <div id="analysis-summary-wrapper">
+                        <div class="bg-yellow-50 p-6 rounded-lg">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Payment Strategy Summary</h2>
+                             <p id="analysis-summary-placeholder" class="text-sm text-center text-gray-500 mt-4">Define your payment goal and run a scenario to see the summary.</p>
+                            <div id="analysisSummaryResult"></div>
                         </div>
                     </div>
                 </div>
@@ -373,7 +374,6 @@
             const eurForFull = getRequiredEur(totalDebt, eurToTryRate, expenseValue, expenseType);
             const eurForMin = getRequiredEur(minimumPayable, eurToTryRate, expenseValue, expenseType);
             
-            // Calculate potential interest on the payable amounts themselves
             const dailyInterestOnFullPayable = totalDebt * dailyInterestRate * (1 - INTEREST_TAX_RATE);
             const dailyInterestOnMinPayable = minimumPayable * dailyInterestRate * (1 - INTEREST_TAX_RATE);
 
@@ -602,11 +602,3 @@
 
 </body>
 </html>
-"
-I'm getting the following errors when I run the code:
-
-[09:07:44 AM] [CONSOLE_ERROR] Calculation Error: TypeError: Cannot read properties of null (reading 'value')
-Stack: TypeError: Cannot read properties of null (reading 'value')
-    at HTMLButtonElement.performCalculations (blob:https://1fxfk6y1lvm2p9f5wf5o1g6i3n6r6teydfjg9oq4ohh8qogttf-h791210728.scf.usercontent.goog/3930787e-b873-41d7-9379-9152e3cffebd:662:49)
-
-Can you fix th
